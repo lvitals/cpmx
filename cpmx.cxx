@@ -42,7 +42,7 @@
 
 #include <file_wrapper.hxx>
 #include <trace_logger.hxx>
-#include <configurator.hxx>
+#include <console.hxx>
 #include <cpu_cycle_timer.hxx>
 
 #include "x80.hxx"
@@ -197,7 +197,7 @@ struct DiskParameterBlock // for BDOS 31. https://www.seasip.info/Cpm/format22.h
 #pragma pack(pop)
 
 TraceLogger tracer;
-Configuration g_consoleConfig;
+ConsoleConfiguration g_consoleConfig;
 
 static bool g_haltExecuted = false;
 static bool g_emulationEnded = false;
@@ -1436,7 +1436,7 @@ uint8_t map_input( uint8_t input )
 
     if ( 0 == input || 0xe0 == input )
     {
-        uint8_t next = (uint8_t) Configuration::portable_getch();
+        uint8_t next = (uint8_t) ConsoleConfiguration::portable_getch();
 
         // map various keys to ^ XSEDCRG used in many apps.
 
@@ -1465,9 +1465,9 @@ uint8_t map_input( uint8_t input )
         if ( g_consoleConfig.portable_kbhit() )
         {
             tracer.Trace( "read an escape on linux... getting next char\n" );
-            uint8_t nexta = Configuration::portable_getch();
+            uint8_t nexta = ConsoleConfiguration::portable_getch();
             tracer.Trace( "read an escape on linux... getting next char again\n" );
-            uint8_t nextb = Configuration::portable_getch();
+            uint8_t nextb = ConsoleConfiguration::portable_getch();
             tracer.Trace( "  nexta: %02x. nextb: %02x\n", nexta, nextb );
         
             if ( '[' == nexta )
@@ -1520,7 +1520,7 @@ char get_next_kbd_char()
     if ( g_fileInputOffset < g_fileInputText.size() )
         return g_fileInputText[ g_fileInputOffset++ ];
 
-    return (char) Configuration::portable_getch();
+    return (char) ConsoleConfiguration::portable_getch();
 } //get_next_kbd_char
 
 bool is_kbd_char_available()

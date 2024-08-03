@@ -6,7 +6,7 @@
 #include <graph.h>
 #include <dos.h>
 
-class Configuration
+class ConsoleConfiguration
 {
     private:
         bool outputEstablished;
@@ -14,8 +14,8 @@ class Configuration
         static void __interrupt __far controlc_routine() {}
         
     public:
-        Configuration() : outputEstablished( false ), prev_int_23( 0 ) {}
-        ~Configuration() {}
+        ConsoleConfiguration() : outputEstablished( false ), prev_int_23( 0 ) {}
+        ~ConsoleConfiguration() {}
 
         void EstablishConsoleOutput( int16_t width = 80, int16_t height = 24 )
         {
@@ -65,7 +65,7 @@ class Configuration
 using namespace std;
 using namespace std::chrono;
 
-class Configuration
+class ConsoleConfiguration
 {
     private:
         #ifdef _WIN32
@@ -312,7 +312,7 @@ class Configuration
 
     public:
         #ifdef _WIN32
-            Configuration() : oldOutputConsoleMode( 0 ), oldInputConsoleMode( 0 ),
+            ConsoleConfiguration() : oldOutputConsoleMode( 0 ), oldInputConsoleMode( 0 ),
                                      setWidth( 0 ), oldOutputCP( 0 ),
                                      inputEstablished( false ), outputEstablished( false )
             {
@@ -326,15 +326,15 @@ class Configuration
                 EstablishConsoleInput();
 
                 memset( aReady, 0, sizeof( aReady ) );
-            } //Configuration
+            } //ConsoleConfiguration
         #else
-            Configuration() : inputEstablished( false ), outputEstablished( false )
+            ConsoleConfiguration() : inputEstablished( false ), outputEstablished( false )
             {
                 EstablishConsoleInput();
-            } //Configuration
+            } //ConsoleConfiguration
         #endif
 
-        ~Configuration()
+        ~ConsoleConfiguration()
         {
             RestoreConsole();
         }
@@ -349,15 +349,30 @@ class Configuration
         void SetCursorInfo( uint32_t size ) // 0 to 100
         {
             #ifdef _WIN32
-                if (consoleOutputHandle != INVALID_HANDLE_VALUE) {
+                if ( 0 != consoleOutputHandle )
+                {
                     CONSOLE_CURSOR_INFO info = {0};
-                    info.dwSize = (size == 0) ? 1 : size;
-                    info.bVisible = (size != 0);
+                    if ( 0 == size )
+                    {
+                        info.dwSize = 1;
+                        info.bVisible = FALSE;
+                    }
+                    else
+                    {
+                        info.dwSize = size;
+                        info.bVisible = TRUE;
+                    }
+        
                     SetConsoleCursorInfo( consoleOutputHandle, &info );
                 }
              #else
-                if (outputEstablished) {
-                    printf(size == 0 ? "\x1b[?25l" : "\x1b[?25h");
+                if ( outputEstablished )
+                {
+                    if ( 0 == size )
+                        printf( "\x1b[?25l" );
+                    else
+                        printf( "\x1b[?25h" );
+                    fflush( stdout );
                 }
              #endif
         } //SetCursorInfo
@@ -564,21 +579,20 @@ class Configuration
 
         int portable_kbhit()
         {
-            int result = 0;
+            if ( !isatty( fileno( stdin ) ) )
+                return ( 0 == feof( stdin) );
 
             #ifdef _WIN32
                 if ( 0 != aReady[ 0 ] )
                     return true;
-                result = _kbhit();
+                return _kbhit();
             #else
                 fd_set set;
                 FD_ZERO( &set );
                 FD_SET( STDIN_FILENO, &set );
                 struct timeval timeout = {0};
-                result = ( select( 1, &set, NULL, NULL, &timeout ) > 0 );
+                return ( select( 1, &set, NULL, NULL, &timeout ) > 0 );
             #endif
-
-            return result;
         } //portable_kbhit
 
 #ifdef _WIN32
@@ -586,6 +600,14 @@ class Configuration
 
         int linux_getch()
         {
+            if ( !isatty( fileno( stdin ) ) )
+            {
+                char data;
+                if ( 1 == read( 0, &data, 1 ) )
+                    return data;
+                return EOF;
+            }
+
             size_t cReady = strlen( aReady );
             if ( 0 != cReady )
             {
@@ -632,6 +654,18 @@ class Configuration
 
         static int portable_getch()
         {
+            if ( !isatty( fileno( stdin ) ) )
+            {
+                char data;
+                if ( 1 == read( 0, &data, 1 ) )
+                {
+                    if ( 0x0a == data )
+                        data = 0x0d;
+                    return data;
+                }
+                return EOF;
+            }
+
             #ifdef _WIN32
                 return _getch();
             #else
@@ -707,6 +741,6 @@ class Configuration
             buf[ len ] = 0;
             return buf;
         } //portable_gets_s
-}; //Configuration
+}; //ConsoleConfiguration
 
 #endif // WATCOM
