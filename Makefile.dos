@@ -1,0 +1,26 @@
+CC = wcc
+CXX = wpp
+CFLAGS_DEBUG = -d -bt=dos -I .
+CFLAGS_RELEASE = -d -bt=dos -I .
+LINKFLAGS = -bt=dos
+
+SRC = cpmx.cxx x80.cxx
+OBJ = $(SRC:.cxx=.obj)
+
+all: release
+
+debug: CFLAGS = $(CFLAGS_DEBUG)
+debug: $(OBJ)
+	$(CXX) $(LINKFLAGS) -o cpmx.com $(OBJ)
+
+release: CFLAGS = $(CFLAGS_RELEASE)
+release: $(OBJ)
+	$(CXX) $(LINKFLAGS) -o cpmx.com $(OBJ)
+
+%.obj: %.cxx
+	$(CXX) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f cpmx.com $(OBJ)
+
+.PHONY: all debug release clean

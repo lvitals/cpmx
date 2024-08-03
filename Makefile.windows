@@ -1,0 +1,24 @@
+CXX = x86_64-w64-mingw32-g++
+CXXFLAGS_DEBUG = -ggdb -Ofast -fno-builtin -DDEBUG -I .
+CXXFLAGS_RELEASE = -Ofast -fno-builtin -DNDEBUG -I .
+
+# Source files
+SRC = cpmx.cxx x80.cxx
+
+# Default target
+all: release
+
+# Targets
+debug: CXXFLAGS = $(CXXFLAGS_DEBUG)
+debug: cpmx.exe
+
+release: CXXFLAGS = $(CXXFLAGS_RELEASE)
+release: cpmx.exe
+
+cpmx.exe: $(SRC)
+	$(CXX) $(CXXFLAGS) $(SRC) -o cpmx.exe
+
+clean:
+	rm -f cpmx.exe
+
+.PHONY: all debug release clean

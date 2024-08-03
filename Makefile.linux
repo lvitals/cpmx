@@ -1,0 +1,25 @@
+CXX = clang++
+# CXX = g++
+CXXFLAGS_DEBUG = -ggdb -Ofast -fno-builtin -DDEBUG -I .
+CXXFLAGS_RELEASE = -Ofast -fno-builtin -DNDEBUG -I .
+
+# Source files
+SRC = cpmx.cxx x80.cxx
+
+# Default target
+all: release
+
+# Targets
+debug: CXXFLAGS = $(CXXFLAGS_DEBUG)
+debug: cpmx
+
+release: CXXFLAGS = $(CXXFLAGS_RELEASE)
+release: cpmx
+
+cpmx:
+	$(CXX) $(CXXFLAGS) $(SRC) -o cpmx
+
+clean:
+	rm -f cpmx
+
+.PHONY: all debug release clean
